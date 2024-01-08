@@ -1,0 +1,27 @@
+[toolchain]
+
+[features]
+seeds = false
+skip-lint = false
+
+[programs.localnet]
+cercols = "FjZVUx8ergLAEaB1Mucqizhk9XtQTZpnAffS5FBT2h4c"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "Localnet"
+wallet = "/Users/matt/.config/solana/id.json"
+
+[test.validator]
+url = "https://mainnet.helius-rpc.com/?api-key=530a62d7-365f-40e6-bbb6-6572225f85ce"
+
+[[test.validator.clone]]
+address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+
+[[test.validator.clone]]
+address = "J1S9H3QjnRtBbbuD4HjPV6RpRhwuk4zKbxsnCHuTgh9w"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
