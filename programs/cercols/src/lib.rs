@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{metadata::{MetadataAccount}, token::Mint};
+use anchor_spl::token::Mint;
 // use mpl_token_metadata::accounts::Metadata;
 
 declare_id!("FjZVUx8ergLAEaB1Mucqizhk9XtQTZpnAffS5FBT2h4c");
@@ -16,6 +16,10 @@ pub mod cercols {
         pool.swap_fee_lamports = swap_fee_lamports;
         pool.size = 0;
         msg!("ctx: {:?}", ctx.accounts.pool.collection_mint.to_string());
+
+        // let metadata_pubkey = Metadata::find_pda(&ctx.accounts.collection_mint.key());
+        // let metadata: Metadata = Metadata::try_from(metadata_pubkey.to_account_info());
+        
         Ok(())
     }
 
@@ -48,9 +52,16 @@ pub struct PoolState { // 8
 #[derive(Accounts)]
 #[instruction(swap_fee_lamports: u64)]
 pub struct InitPool<'info> {
-    #[account(init, payer = user, seeds = [b"cercols_pool", collection_mint.key().as_ref()], bump, space = 84 )]
+    #[account(
+        init, 
+        payer = user, 
+        seeds = [b"cercols_pool", collection_mint.key().as_ref(), user.key().as_ref()], 
+        bump, 
+        space = 84 
+    )]
     pub pool: Account<'info, PoolState>,
 
+    #[account(mint::decimals = 0)]
     pub collection_mint: Account<'info, Mint>,
 
     #[account(mut)]
