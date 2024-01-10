@@ -25,3 +25,4 @@ address = "J1S9H3QjnRtBbbuD4HjPV6RpRhwuk4zKbxsnCHuTgh9w"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+test_watch = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 -w --watch-files tests/**/*.ts"
