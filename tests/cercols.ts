@@ -10,8 +10,12 @@ describe("cercols", () => {
 
   const program = anchor.workspace.Cercols as Program<Cercols>;
 
+  const metadataProgram = new anchor.web3.PublicKey(
+    "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+  );
+
   const collectionMint = new anchor.web3.PublicKey(
-    "J1S9H3QjnRtBbbuD4HjPV6RpRhwuk4zKbxsnCHuTgh9w"
+    "CKPYygUZ9aA4JY7qmyuvxT67ibjmjpddNtHJeu1uQBSM"
   );
 
   const [poolPda] = anchor.web3.PublicKey.findProgramAddressSync(
@@ -30,22 +34,52 @@ describe("cercols", () => {
 
   // NFT of the collection - must be owned by the Signer
   const nftMint = new anchor.web3.PublicKey(
-    "DskQgewLBTmPBZwWAZ5U7swcPeggpZ5eRbb6gurY1oZd"
+    "EGUZ1sDcA36amdE7KBHe2JRSTCRdM48PiJ6ZVX6PcL4D"
   );
   const nftToken = new anchor.web3.PublicKey(
-    "H8nooeBKDQTcp75zZoyBuMHiWjsWPWH42q3dWJn8CA3a"
+    "5ad2gME71CcTyP61zx3gqmKF2wsHvAsDdAyeEC2dBNPX"
   );
   const nftMetadata = new anchor.web3.PublicKey(
-    "9naYoZ4uZxCPPvQPnQwzmFFnFKwrLiUNLf7sQnqWr4RN"
+    "Ewo9HX1gdHC4nwVQ8bRw9Bu1NRLZpuSK8dwjjvSBEYBS"
   );
   const nftEdition = new anchor.web3.PublicKey(
-    "FkHtoHUk6kWehv6VrH1mdbgfBM7xxhmcpEubZ8cz3quq"
+    "2HQrHAZXc81UUFjSNs45prxiu9PPaJqVjYKu26UpLm9E"
   );
 
   const nftCustody = token.getAssociatedTokenAddressSync(
     nftMint,
     nftAuthorityPda,
     true
+  );
+
+  const [sourceTokenRecord] = anchor.web3.PublicKey.findProgramAddressSync(
+    [
+      anchor.utils.bytes.utf8.encode("metadata"),
+      metadataProgram.toBytes(),
+      nftMint.toBytes(),
+      anchor.utils.bytes.utf8.encode("token_record"),
+      nftToken.toBytes(),
+    ],
+    program.programId
+  );
+
+  const [destinationTokenRecord] = anchor.web3.PublicKey.findProgramAddressSync(
+    [
+      anchor.utils.bytes.utf8.encode("metadata"),
+      metadataProgram.toBytes(),
+      nftMint.toBytes(),
+      anchor.utils.bytes.utf8.encode("token_record"),
+      nftCustody.toBytes(),
+    ],
+    program.programId
+  );
+
+  const authRulesProgram = new anchor.web3.PublicKey(
+    "auth9SigNpDKz4sJJ1DfCTuZrZNSAgh9sFD3rboVmgg"
+  );
+
+  const sysvarInstructions = new anchor.web3.PublicKey(
+    "Sysvar1nstructions1111111111111111111111111"
   );
 
   const swapFeeLamports = new anchor.BN(0.1 * anchor.web3.LAMPORTS_PER_SOL);
@@ -73,7 +107,7 @@ describe("cercols", () => {
     expect(account.size).to.eq(0);
   });
 
-  it.skip("Can deposit an NFT from the collection", async () => {
+  it("Can deposit an NFT from the collection", async () => {
     const tx = await program.methods
       .deposit()
       .accounts({
@@ -84,6 +118,11 @@ describe("cercols", () => {
         nftMetadata,
         nftEdition,
         nftCustody,
+        // sourceTokenRecord,
+        // destinationTokenRecord,
+        metadataProgram,
+        sysvarInstructions,
+        // authRulesProgram,
       })
       .rpc();
 

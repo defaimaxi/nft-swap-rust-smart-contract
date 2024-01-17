@@ -1,9 +1,13 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::sysvar;
 use anchor_spl::{
-    token::{Mint, TokenAccount, Token, Transfer, transfer}, 
-    metadata::{MetadataAccount, MasterEditionAccount, Metadata},
-    associated_token::AssociatedToken
+    token::{Mint, TokenAccount, Token}, 
+    metadata::{MetadataAccount, Metadata, MasterEditionAccount, mpl_token_metadata::instructions::TransferV1CpiBuilder, TokenRecordAccount},
+    associated_token::AssociatedToken,
 };
+use mpl_token_auth_rules;
+// use mpl_token_metadata::instructions::Transfer;
+// use mpl_token_metadata::accounts::Metadata;
 
 declare_id!("FjZVUx8ergLAEaB1Mucqizhk9XtQTZpnAffS5FBT2h4c");
 
@@ -29,7 +33,42 @@ pub mod cercols {
         let pool = &mut ctx.accounts.pool;
         pool.size = pool.size.checked_add(1).unwrap();
 
-        transfer(ctx.accounts.deposit_nft_ctx(), 1)?;
+        let mut transfer_cpi = TransferV1CpiBuilder::new(&ctx.accounts.metadata_program);
+
+        let nft_token = &ctx.accounts.nft_token.to_account_info();
+        let user = &ctx.accounts.user.to_account_info();
+        let nft_custody = &ctx.accounts.nft_custody.to_account_info();
+        let nft_mint = &ctx.accounts.nft_mint.to_account_info();
+        let nft_metadata = &ctx.accounts.nft_metadata.to_account_info();
+        let nft_edition = &ctx.accounts.nft_edition.to_account_info();
+        // let auth_rules_program = &ctx.accounts.auth_rules_program.to_account_info();
+        // let auth_rules = &ctx.accounts.auth_rules.to_account_info();
+        // let source_token_record = &ctx.accounts.source_token_record.to_account_info();
+        // let destination_token_record = &ctx.accounts.destination_token_record.to_account_info();
+        
+        transfer_cpi
+        .token(nft_token)
+        .token_owner(user)
+        .destination_token(nft_custody)
+        .destination_owner(&ctx.accounts.nft_authority)
+        .mint(nft_mint)
+        .metadata(nft_metadata)
+        .edition(Some(nft_edition))
+        // .token_record(Some(source_token_record))
+        // .destination_token_record(Some(destination_token_record))
+        .authority(user)
+        .payer(user)
+        .system_program(&ctx.accounts.system_program)
+        // .authorization_rules_program(Some(auth_rules_program))
+        // .authorization_rules(Some(auth_rules))
+        .sysvar_instructions(&ctx.accounts.sysvar_instructions)
+        .spl_token_program(&ctx.accounts.metadata_program)
+        .spl_ata_program(&ctx.accounts.associated_token_program)
+        .amount(1);
+
+        transfer_cpi.invoke()?;
+
+        // transfer(ctx.accounts.deposit_nft_ctx(), 1)?;
 
         Ok(())
     }
@@ -117,6 +156,7 @@ pub struct Deposit<'info> {
     pub nft_token: Account<'info, TokenAccount>,
     
     #[account(
+        mut,
         seeds = [b"metadata", Metadata::id().as_ref(), nft_mint.key().as_ref()],
         seeds::program = Metadata::id(),
         bump,
@@ -148,28 +188,67 @@ pub struct Deposit<'info> {
     )]
     pub nft_custody: Account<'info, TokenAccount>,
 
+    // #[account(
+    //     mut,
+    //     seeds = [b"metadata", 
+    //         Metadata::id().as_ref(),
+    //         nft_mint.key().as_ref(),
+    //         b"token_record",
+    //         nft_token.key().as_ref(),
+    //     ],
+    //     seeds::program = Metadata::id(),
+    //     bump
+    // )]
+    // pub source_token_record: Account<'info, TokenRecordAccount>,
+    
+    // #[account(
+    //     mut,
+    //     seeds = [b"metadata", 
+    //         Metadata::id().as_ref(),
+    //         nft_mint.key().as_ref(),
+    //         b"token_record",
+    //         nft_custody.key().as_ref(),
+    //     ],
+    //     seeds::program = Metadata::id(),
+    //     bump
+    // )]
+    // pub destination_token_record: Account<'info, TokenRecordAccount>,
+
     #[account(mut)]
     pub user: Signer<'info>,
 
     pub token_program: Program<'info, Token>,
+    pub metadata_program: Program<'info, Metadata>,
     pub associated_token_program: Program<'info, AssociatedToken>,
-    pub system_program: Program<'info, System>
+    pub system_program: Program<'info, System>,
 
+    /// CHECK: account constraints checked in account trait
+    #[account(address = sysvar::instructions::id())]
+    pub sysvar_instructions: UncheckedAccount<'info>,
+
+    // /// CHECK: account constraints checked in account trait
+    // #[account(address = mpl_token_auth_rules::id())]
+    // pub auth_rules_program: UncheckedAccount<'info>,
+
+    // /// CHECK: account constraints checked in account trait
+    // #[account(owner = mpl_token_auth_rules::id())]
+    // pub auth_rules: UncheckedAccount<'info>,
 }
 
-impl<'info> Deposit<'info> {
-    pub fn deposit_nft_ctx(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
-        let cpi_accounts = Transfer {
-            from: self.nft_token.to_account_info(),
-            to: self.nft_custody.to_account_info(),
-            authority: self.user.to_account_info()
-        };
+// impl<'info> Deposit<'info> {
+//     pub fn deposit_nft_ctx(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+//         let cpi_accounts = Transfer {
 
-        let cpi_program = self.token_program.clone().to_account_info();
+//             // from: self.nft_token.to_account_info(),
+//             // to: self.nft_custody.to_account_info(),
+//             // authority: self.user.to_account_info()
+//         };
 
-        CpiContext::new(cpi_program, cpi_accounts)
-    }
-}
+//         let cpi_program = self.metadata_program.clone().to_account_info();
+
+//         CpiContext::new(cpi_program, cpi_accounts)
+//     }
+// }
 
 #[derive(Accounts)]
 pub struct Withdraw {}
