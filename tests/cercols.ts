@@ -20,7 +20,7 @@ import {
 import { readFileSync } from "fs";
 import path from "path";
 
-describe("cercols", async () => {
+describe("cercols", () => {
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
@@ -122,7 +122,7 @@ describe("cercols", async () => {
   before(async () => {
     await umi.rpc.airdrop(umi.payer.publicKey, sol(100));
 
-    const tx = await createProgrammableNft(umi, {
+    await createProgrammableNft(umi, {
       mint: nftMint2,
       tokenOwner: umi.identity.publicKey,
       name: "Cercols #1",
@@ -130,13 +130,13 @@ describe("cercols", async () => {
       sellerFeeBasisPoints: percentAmount(2),
     }).sendAndConfirm(umi);
 
-    console.log("tx", tx);
+    // console.log("tx", tx);
   });
 
   // after(async () => {});
 
   it("Is initialized!", async () => {
-    const tx = await program.methods
+    await program.methods
       .initPool(swapFeeLamports)
       .accounts({
         collectionMint,
@@ -144,8 +144,6 @@ describe("cercols", async () => {
         nftAuthority: nftAuthorityPda,
       })
       .rpc();
-
-    console.log("init tx", tx);
 
     const account = await program.account.poolState.fetch(poolPda);
 
