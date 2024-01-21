@@ -4,25 +4,33 @@ import { Program } from "@coral-xyz/anchor";
 import { Cercols } from "../target/types/cercols";
 import { expect } from "chai";
 import {
+  TransactionBuilderSendAndConfirmOptions,
   createSignerFromKeypair,
   generateSigner,
-  keypairIdentity,
   percentAmount,
   publicKey,
   signerIdentity,
   sol,
+  some,
 } from "@metaplex-foundation/umi";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import {
+  MPL_TOKEN_METADATA_PROGRAM_ID,
+  createNft,
   createProgrammableNft,
+  findMetadataPda,
   mplTokenMetadata,
+  verifyCollectionV1,
 } from "@metaplex-foundation/mpl-token-metadata";
 import { readFileSync } from "fs";
 import path from "path";
+import { findAssociatedTokenPda } from "@metaplex-foundation/mpl-toolbox";
 
 describe("cercols", () => {
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.env();
+  console.log("provider", anchor.AnchorProvider.defaultOptions());
+
   anchor.setProvider(provider);
 
   const program = anchor.workspace.Cercols as Program<Cercols>;
@@ -30,6 +38,12 @@ describe("cercols", () => {
   const umi = createUmi(provider.connection.rpcEndpoint).use(
     mplTokenMetadata()
   );
+
+  // Use the same config as Anchor
+  const sendAndConfirmOptions: TransactionBuilderSendAndConfirmOptions = {
+    send: { commitment: "processed", preflightCommitment: "processed" },
+    confirm: { commitment: "processed" },
+  };
 
   // Umi needs the keypair from disk
   const keyFileContents = JSON.parse(
@@ -44,18 +58,32 @@ describe("cercols", () => {
 
   umi.use(signerIdentity(createSignerFromKeypair(umi, signer)));
 
-  const metadataProgram = new anchor.web3.PublicKey(
-    "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+  // Collection Mint
+  const collectionMint = generateSigner(umi);
+  const collectionMintPubkey = new anchor.web3.PublicKey(
+    collectionMint.publicKey
   );
 
-  const collectionMint = new anchor.web3.PublicKey(
-    "CKPYygUZ9aA4JY7qmyuvxT67ibjmjpddNtHJeu1uQBSM"
+  // NFT of the collection - must be owned by the Signer
+  const nftMint2 = generateSigner(umi);
+  const nftMint2Pubkey = new anchor.web3.PublicKey(nftMint2.publicKey);
+
+  const nftToken = findAssociatedTokenPda(umi, {
+    mint: nftMint2.publicKey,
+    owner: umi.identity.publicKey,
+  });
+  const nftTokenPubkey = new anchor.web3.PublicKey(publicKey(nftToken));
+
+  const nftMetadata = findMetadataPda(umi, { mint: nftMint2.publicKey });
+
+  const metadataProgram = new anchor.web3.PublicKey(
+    MPL_TOKEN_METADATA_PROGRAM_ID
   );
 
   const [poolPda] = anchor.web3.PublicKey.findProgramAddressSync(
     [
       anchor.utils.bytes.utf8.encode("cercols_pool"),
-      collectionMint.toBuffer(),
+      collectionMintPubkey.toBuffer(),
       program.provider.publicKey.toBytes(),
     ],
     program.programId
@@ -66,23 +94,8 @@ describe("cercols", () => {
     program.programId
   );
 
-  // NFT of the collection - must be owned by the Signer
-  const nftMint2 = generateSigner(umi);
-  const nftMint = new anchor.web3.PublicKey(
-    "EGUZ1sDcA36amdE7KBHe2JRSTCRdM48PiJ6ZVX6PcL4D"
-  );
-  const nftToken = new anchor.web3.PublicKey(
-    "5ad2gME71CcTyP61zx3gqmKF2wsHvAsDdAyeEC2dBNPX"
-  );
-  const nftMetadata = new anchor.web3.PublicKey(
-    "Ewo9HX1gdHC4nwVQ8bRw9Bu1NRLZpuSK8dwjjvSBEYBS"
-  );
-  const nftEdition = new anchor.web3.PublicKey(
-    "2HQrHAZXc81UUFjSNs45prxiu9PPaJqVjYKu26UpLm9E"
-  );
-
   const nftCustody = token.getAssociatedTokenAddressSync(
-    nftMint,
+    nftMint2Pubkey,
     nftAuthorityPda,
     true
   );
@@ -91,9 +104,9 @@ describe("cercols", () => {
     [
       anchor.utils.bytes.utf8.encode("metadata"),
       metadataProgram.toBytes(),
-      nftMint.toBytes(),
+      nftMint2Pubkey.toBytes(),
       anchor.utils.bytes.utf8.encode("token_record"),
-      nftToken.toBytes(),
+      nftTokenPubkey.toBytes(),
     ],
     program.programId
   );
@@ -102,7 +115,7 @@ describe("cercols", () => {
     [
       anchor.utils.bytes.utf8.encode("metadata"),
       metadataProgram.toBytes(),
-      nftMint.toBytes(),
+      nftMint2Pubkey.toBytes(),
       anchor.utils.bytes.utf8.encode("token_record"),
       nftCustody.toBytes(),
     ],
@@ -120,7 +133,15 @@ describe("cercols", () => {
   const swapFeeLamports = new anchor.BN(0.1 * anchor.web3.LAMPORTS_PER_SOL);
 
   before(async () => {
-    await umi.rpc.airdrop(umi.payer.publicKey, sol(100));
+    await umi.rpc.airdrop(umi.payer.publicKey, sol(10));
+
+    await createNft(umi, {
+      mint: collectionMint,
+      name: "Cercols Collection",
+      uri: "https://cercols/collection",
+      sellerFeeBasisPoints: percentAmount(5),
+      isCollection: true,
+    }).sendAndConfirm(umi, sendAndConfirmOptions);
 
     await createProgrammableNft(umi, {
       mint: nftMint2,
@@ -128,7 +149,14 @@ describe("cercols", () => {
       name: "Cercols #1",
       uri: "https://cercols/1",
       sellerFeeBasisPoints: percentAmount(2),
-    }).sendAndConfirm(umi);
+      collection: some({ key: collectionMint.publicKey, verified: false }),
+    }).sendAndConfirm(umi, sendAndConfirmOptions);
+
+    await verifyCollectionV1(umi, {
+      metadata: nftMetadata,
+      collectionMint: collectionMint.publicKey,
+      authority: umi.payer,
+    }).sendAndConfirm(umi, sendAndConfirmOptions);
 
     // console.log("tx", tx);
   });
@@ -139,7 +167,7 @@ describe("cercols", () => {
     await program.methods
       .initPool(swapFeeLamports)
       .accounts({
-        collectionMint,
+        collectionMint: collectionMintPubkey,
         pool: poolPda,
         nftAuthority: nftAuthorityPda,
       })
@@ -147,7 +175,9 @@ describe("cercols", () => {
 
     const account = await program.account.poolState.fetch(poolPda);
 
-    expect(account.collectionMint.toBase58()).to.eq(collectionMint.toBase58());
+    expect(account.collectionMint.toBase58()).to.eq(
+      collectionMintPubkey.toBase58()
+    );
     expect(account.authority.toBase58()).to.eq(
       anchor.getProvider().publicKey.toBase58()
     );
