@@ -12,7 +12,7 @@ url = "https://api.apr.dev"
 
 [provider]
 cluster = "Localnet"
-wallet = "/Users/matt/.config/solana/critterstap.json"
+wallet = "/Users/matt/.config/solana/id.json"
 
 [test.validator]
 url = "https://mainnet.helius-rpc.com/?api-key=530a62d7-365f-40e6-bbb6-6572225f85ce"

@@ -3,12 +3,43 @@ import * as token from "@solana/spl-token";
 import { Program } from "@coral-xyz/anchor";
 import { Cercols } from "../target/types/cercols";
 import { expect } from "chai";
+import {
+  createSignerFromKeypair,
+  generateSigner,
+  keypairIdentity,
+  percentAmount,
+  publicKey,
+  signerIdentity,
+} from "@metaplex-foundation/umi";
+import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
+import {
+  createProgrammableNft,
+  mplTokenMetadata,
+} from "@metaplex-foundation/mpl-token-metadata";
+import { readFileSync } from "fs";
+import path from "path";
 
-describe("cercols", () => {
+describe("cercols", async () => {
   // Configure the client to use the local cluster.
-  anchor.setProvider(anchor.AnchorProvider.env());
+  const provider = anchor.AnchorProvider.env();
+  anchor.setProvider(provider);
 
   const program = anchor.workspace.Cercols as Program<Cercols>;
+
+  const umi = createUmi("http://127.0.0.1:8899").use(mplTokenMetadata());
+
+  // Umi needs the keypair from disk
+  const keyFileContents = JSON.parse(
+    readFileSync(
+      path.join(process.env.HOME, ".config/solana/id.json")
+    ).toString()
+  );
+
+  const signer = umi.eddsa.createKeypairFromSecretKey(
+    new Uint8Array(keyFileContents)
+  );
+
+  umi.use(signerIdentity(createSignerFromKeypair(umi, signer)));
 
   const metadataProgram = new anchor.web3.PublicKey(
     "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
@@ -33,6 +64,7 @@ describe("cercols", () => {
   );
 
   // NFT of the collection - must be owned by the Signer
+  const nftMint2 = generateSigner(umi);
   const nftMint = new anchor.web3.PublicKey(
     "EGUZ1sDcA36amdE7KBHe2JRSTCRdM48PiJ6ZVX6PcL4D"
   );
@@ -84,6 +116,62 @@ describe("cercols", () => {
 
   const swapFeeLamports = new anchor.BN(0.1 * anchor.web3.LAMPORTS_PER_SOL);
 
+  before((done) => {
+    console.log("beforeStart");
+
+    // const balance = await provider.connection.requestAirdrop(
+    //   new anchor.web3.PublicKey(provider.publicKey),
+    //   2 * anchor.web3.LAMPORTS_PER_SOL
+    // );
+
+    // console.log("airdropComplete", balance);
+
+    // console.log("beforeEnd");
+
+    // const tx = await createProgrammableNft(umi, {
+    //   mint: nftMint2,
+    //   name: "Cercols #1",
+    //   uri: "https://cercols/1",
+    //   sellerFeeBasisPoints: percentAmount(2),
+    // }).sendAndConfirm(umi);
+
+    // console.log("tx", tx);
+
+    // return tx;
+
+    provider.connection
+      .requestAirdrop(
+        new anchor.web3.PublicKey(nftMint2.publicKey),
+        2 * anchor.web3.LAMPORTS_PER_SOL
+      )
+      .then((e) => {
+        console.log("airdropThen", e);
+        createProgrammableNft(umi, {
+          mint: nftMint2,
+          name: "Cercols #1",
+          uri: "https://cercols/1",
+          sellerFeeBasisPoints: percentAmount(2),
+        })
+          .sendAndConfirm(umi)
+          .then((e) => {
+            console.log("mint", e);
+          })
+          .catch((e) => {
+            console.error("err", e);
+          })
+          .finally(() => {
+            console.log("finally");
+            done();
+          });
+      });
+
+    // await Promise.resolve();
+  });
+
+  after(async () => {
+    // console.log("after");
+  });
+
   it("Is initialized!", async () => {
     const tx = await program.methods
       .initPool(swapFeeLamports)
@@ -93,7 +181,10 @@ describe("cercols", () => {
         nftAuthority: nftAuthorityPda,
       })
       .rpc();
-    console.log("Your transaction signature", tx);
+
+    const balance = await provider.connection.getBalance(provider.publicKey);
+
+    console.log("balance", balance / anchor.web3.LAMPORTS_PER_SOL);
 
     const account = await program.account.poolState.fetch(poolPda);
 
@@ -118,11 +209,11 @@ describe("cercols", () => {
         nftMetadata,
         nftEdition,
         nftCustody,
-        // sourceTokenRecord,
-        // destinationTokenRecord,
+        sourceTokenRecord,
+        destinationTokenRecord,
         metadataProgram,
         sysvarInstructions,
-        // authRulesProgram,
+        authRulesProgram,
       })
       .rpc();
 
