@@ -10,6 +10,7 @@ import {
   percentAmount,
   publicKey,
   signerIdentity,
+  sol,
 } from "@metaplex-foundation/umi";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import {
@@ -19,14 +20,16 @@ import {
 import { readFileSync } from "fs";
 import path from "path";
 
-describe("cercols", () => {
+describe("cercols", async () => {
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
   const program = anchor.workspace.Cercols as Program<Cercols>;
 
-  const umi = createUmi("http://127.0.0.1:8899").use(mplTokenMetadata());
+  const umi = createUmi(provider.connection.rpcEndpoint).use(
+    mplTokenMetadata()
+  );
 
   // Umi needs the keypair from disk
   const keyFileContents = JSON.parse(
@@ -116,61 +119,21 @@ describe("cercols", () => {
 
   const swapFeeLamports = new anchor.BN(0.1 * anchor.web3.LAMPORTS_PER_SOL);
 
-  before((done) => {
-    console.log("beforeStart");
+  before(async () => {
+    await umi.rpc.airdrop(umi.payer.publicKey, sol(100));
 
-    // const balance = await provider.connection.requestAirdrop(
-    //   new anchor.web3.PublicKey(provider.publicKey),
-    //   2 * anchor.web3.LAMPORTS_PER_SOL
-    // );
+    const tx = await createProgrammableNft(umi, {
+      mint: nftMint2,
+      tokenOwner: umi.identity.publicKey,
+      name: "Cercols #1",
+      uri: "https://cercols/1",
+      sellerFeeBasisPoints: percentAmount(2),
+    }).sendAndConfirm(umi);
 
-    // console.log("airdropComplete", balance);
-
-    // console.log("beforeEnd");
-
-    // const tx = await createProgrammableNft(umi, {
-    //   mint: nftMint2,
-    //   name: "Cercols #1",
-    //   uri: "https://cercols/1",
-    //   sellerFeeBasisPoints: percentAmount(2),
-    // }).sendAndConfirm(umi);
-
-    // console.log("tx", tx);
-
-    // return tx;
-
-    provider.connection
-      .requestAirdrop(
-        new anchor.web3.PublicKey(umi.identity.publicKey),
-        2 * anchor.web3.LAMPORTS_PER_SOL
-      )
-      .then((e) => {
-        console.log("airdropThen", e);
-        createProgrammableNft(umi, {
-          mint: nftMint2,
-          name: "Cercols #1",
-          uri: "https://cercols/1",
-          sellerFeeBasisPoints: percentAmount(2),
-        })
-          .sendAndConfirm(umi)
-          .then((e) => {
-            console.log("mint", e);
-          })
-          .catch((e) => {
-            console.error("err", e);
-          })
-          .finally(() => {
-            console.log("finally");
-            done();
-          });
-      });
-
-    // await Promise.resolve();
+    console.log("tx", tx);
   });
 
-  after(async () => {
-    // console.log("after");
-  });
+  // after(async () => {});
 
   it("Is initialized!", async () => {
     const tx = await program.methods
@@ -181,6 +144,8 @@ describe("cercols", () => {
         nftAuthority: nftAuthorityPda,
       })
       .rpc();
+
+    console.log("init tx", tx);
 
     const account = await program.account.poolState.fetch(poolPda);
 
