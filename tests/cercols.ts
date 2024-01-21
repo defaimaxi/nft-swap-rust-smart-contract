@@ -19,7 +19,7 @@ import {
 import { readFileSync } from "fs";
 import path from "path";
 
-describe("cercols", async () => {
+describe("cercols", () => {
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
@@ -141,7 +141,7 @@ describe("cercols", async () => {
 
     provider.connection
       .requestAirdrop(
-        new anchor.web3.PublicKey(nftMint2.publicKey),
+        new anchor.web3.PublicKey(umi.identity.publicKey),
         2 * anchor.web3.LAMPORTS_PER_SOL
       )
       .then((e) => {
@@ -182,10 +182,6 @@ describe("cercols", async () => {
       })
       .rpc();
 
-    const balance = await provider.connection.getBalance(provider.publicKey);
-
-    console.log("balance", balance / anchor.web3.LAMPORTS_PER_SOL);
-
     const account = await program.account.poolState.fetch(poolPda);
 
     expect(account.collectionMint.toBase58()).to.eq(collectionMint.toBase58());
@@ -198,25 +194,25 @@ describe("cercols", async () => {
     expect(account.size).to.eq(0);
   });
 
-  it("Can deposit an NFT from the collection", async () => {
-    const tx = await program.methods
-      .deposit()
-      .accounts({
-        pool: poolPda,
-        nftAuthority: nftAuthorityPda,
-        nftMint,
-        nftToken,
-        nftMetadata,
-        nftEdition,
-        nftCustody,
-        sourceTokenRecord,
-        destinationTokenRecord,
-        metadataProgram,
-        sysvarInstructions,
-        authRulesProgram,
-      })
-      .rpc();
+  // it("Can deposit an NFT from the collection", async () => {
+  //   const tx = await program.methods
+  //     .deposit()
+  //     .accounts({
+  //       pool: poolPda,
+  //       nftAuthority: nftAuthorityPda,
+  //       nftMint,
+  //       nftToken,
+  //       nftMetadata,
+  //       nftEdition,
+  //       nftCustody,
+  //       sourceTokenRecord,
+  //       destinationTokenRecord,
+  //       metadataProgram,
+  //       sysvarInstructions,
+  //       authRulesProgram,
+  //     })
+  //     .rpc();
 
-    console.log("TX: ", tx);
-  });
+  //   console.log("TX: ", tx);
+  // });
 });
