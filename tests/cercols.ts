@@ -1,5 +1,4 @@
 import * as anchor from "@coral-xyz/anchor";
-import * as token from "@solana/spl-token";
 import { Program } from "@coral-xyz/anchor";
 import { Cercols } from "../target/types/cercols";
 import { expect } from "chai";
@@ -7,6 +6,7 @@ import {
   TransactionBuilderSendAndConfirmOptions,
   createSignerFromKeypair,
   generateSigner,
+  none,
   percentAmount,
   publicKey,
   signerIdentity,
@@ -18,7 +18,6 @@ import {
   MPL_TOKEN_METADATA_PROGRAM_ID,
   createNft,
   createProgrammableNft,
-  findEditionMarkerPda,
   findMasterEditionPda,
   findMetadataPda,
   findTokenRecordPda,
@@ -39,12 +38,6 @@ describe("cercols", () => {
   const umi = createUmi(provider.connection.rpcEndpoint).use(
     mplTokenMetadata()
   );
-
-  // Use the same config as Anchor
-  const sendAndConfirmOptions: TransactionBuilderSendAndConfirmOptions = {
-    send: { commitment: "processed", preflightCommitment: "processed" },
-    confirm: { commitment: "processed" },
-  };
 
   // Umi needs the keypair from disk
   const keyFileContents = JSON.parse(
@@ -104,11 +97,11 @@ describe("cercols", () => {
     program.programId
   );
 
-  const nftCustody = token.getAssociatedTokenAddressSync(
-    nftMint2Pubkey,
-    nftAuthorityPda,
-    true
-  );
+  const nftCustody = findAssociatedTokenPda(umi, {
+    mint: nftMint2.publicKey,
+    owner: publicKey(nftAuthorityPda),
+  });
+  const nftCustodyPubkey = new anchor.web3.PublicKey(nftCustody);
 
   const sourceTokenRecord = findTokenRecordPda(umi, {
     mint: nftMint2.publicKey,
@@ -129,7 +122,11 @@ describe("cercols", () => {
   const swapFeeLamports = new anchor.BN(0.1 * anchor.web3.LAMPORTS_PER_SOL);
 
   before(async () => {
+    console.log("Airdropping SOL...");
+
     await umi.rpc.airdrop(umi.payer.publicKey, sol(10));
+
+    console.log("Creating collection NFT...");
 
     await createNft(umi, {
       mint: collectionMint,
@@ -137,8 +134,9 @@ describe("cercols", () => {
       uri: "https://cercols/collection",
       sellerFeeBasisPoints: percentAmount(5),
       isCollection: true,
-    }).sendAndConfirm(umi, sendAndConfirmOptions);
+    }).sendAndConfirm(umi);
 
+    console.log("Creating pNFT...");
     await createProgrammableNft(umi, {
       mint: nftMint2,
       tokenOwner: umi.identity.publicKey,
@@ -146,13 +144,14 @@ describe("cercols", () => {
       uri: "https://cercols/1",
       sellerFeeBasisPoints: percentAmount(2),
       collection: some({ key: collectionMint.publicKey, verified: false }),
-    }).sendAndConfirm(umi, sendAndConfirmOptions);
+    }).sendAndConfirm(umi);
 
+    console.log("Verifying collection...");
     await verifyCollectionV1(umi, {
       metadata: nftMetadata,
       collectionMint: collectionMint.publicKey,
       authority: umi.payer,
-    }).sendAndConfirm(umi, sendAndConfirmOptions);
+    }).sendAndConfirm(umi);
   });
 
   // after(async () => {});
@@ -191,9 +190,9 @@ describe("cercols", () => {
         nftToken: nftTokenPubkey,
         nftMetadata: nftMetadataPubkey,
         nftEdition: nftEditionPubkey,
-        nftCustody,
+        nftCustody: nftCustodyPubkey,
         sourceTokenRecord: sourceTokenRecordPubkey,
-        // destinationTokenRecord: destinationTokenRecordPubkey,
+        destinationTokenRecord: destinationTokenRecordPubkey,
         metadataProgram,
         sysvarInstructions,
         // authRulesProgram,

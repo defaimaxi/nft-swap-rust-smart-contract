@@ -44,7 +44,7 @@ pub mod cercols {
         // let auth_rules_program = &ctx.accounts.auth_rules_program.to_account_info();
         // let auth_rules = &ctx.accounts.auth_rules.to_account_info();
         let source_token_record = &ctx.accounts.source_token_record.to_account_info();
-        // let destination_token_record = &ctx.accounts.destination_token_record.to_account_info();
+        let destination_token_record = &ctx.accounts.destination_token_record.to_account_info();
         
         transfer_cpi
         .token(nft_token)
@@ -55,15 +55,15 @@ pub mod cercols {
         .metadata(nft_metadata)
         .edition(Some(nft_edition))
         .token_record(Some(source_token_record))
-        // .destination_token_record(Some(destination_token_record))
+        .destination_token_record(Some(destination_token_record))
         .authority(user)
         .payer(user)
         .system_program(&ctx.accounts.system_program)
-        // .authorization_rules_program(Some(auth_rules_program))
-        // .authorization_rules(Some(auth_rules))
         .sysvar_instructions(&ctx.accounts.sysvar_instructions)
         .spl_token_program(&ctx.accounts.metadata_program)
         .spl_ata_program(&ctx.accounts.associated_token_program)
+        // .authorization_rules_program(None)
+        // .authorization_rules(None)
         .amount(1);
 
         transfer_cpi.invoke()?;
@@ -199,18 +199,20 @@ pub struct Deposit<'info> {
     )]
     pub source_token_record: Account<'info, TokenRecordAccount>,
     
-    // #[account(
-    //     mut,
-    //     seeds = [b"metadata", 
-    //         Metadata::id().as_ref(),
-    //         nft_mint.key().as_ref(),
-    //         b"token_record",
-    //         nft_custody.key().as_ref(),
-    //     ],
-    //     seeds::program = Metadata::id(),
-    //     bump
-    // )]
-    // pub destination_token_record: Account<'info, TokenRecordAccount>,
+    #[account(
+        init,
+        payer = user,
+        space = TokenRecordAccount::LEN,
+        seeds = [b"metadata", 
+            Metadata::id().as_ref(),
+            nft_mint.key().as_ref(),
+            b"token_record",
+            nft_custody.key().as_ref(),
+        ],
+        // seeds::program = Metadata::id(),
+        bump
+    )]
+    pub destination_token_record: Account<'info, TokenRecordAccount>,
 
     #[account(mut)]
     pub user: Signer<'info>,
