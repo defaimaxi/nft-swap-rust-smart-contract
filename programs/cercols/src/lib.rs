@@ -41,10 +41,10 @@ pub mod cercols {
         let nft_mint = &ctx.accounts.nft_mint.to_account_info();
         let nft_metadata = &ctx.accounts.nft_metadata.to_account_info();
         let nft_edition = &ctx.accounts.nft_edition.to_account_info();
-        let auth_rules_program = &ctx.accounts.auth_rules_program.to_account_info();
+        // let auth_rules_program = &ctx.accounts.auth_rules_program.to_account_info();
         // let auth_rules = &ctx.accounts.auth_rules.to_account_info();
         let source_token_record = &ctx.accounts.source_token_record.to_account_info();
-        let destination_token_record = &ctx.accounts.destination_token_record.to_account_info();
+        // let destination_token_record = &ctx.accounts.destination_token_record.to_account_info();
         
         transfer_cpi
         .token(nft_token)
@@ -55,11 +55,11 @@ pub mod cercols {
         .metadata(nft_metadata)
         .edition(Some(nft_edition))
         .token_record(Some(source_token_record))
-        .destination_token_record(Some(destination_token_record))
+        // .destination_token_record(Some(destination_token_record))
         .authority(user)
         .payer(user)
         .system_program(&ctx.accounts.system_program)
-        .authorization_rules_program(Some(auth_rules_program))
+        // .authorization_rules_program(Some(auth_rules_program))
         // .authorization_rules(Some(auth_rules))
         .sysvar_instructions(&ctx.accounts.sysvar_instructions)
         .spl_token_program(&ctx.accounts.metadata_program)
@@ -67,8 +67,6 @@ pub mod cercols {
         .amount(1);
 
         transfer_cpi.invoke()?;
-
-        // transfer(ctx.accounts.deposit_nft_ctx(), 1)?;
 
         Ok(())
     }
@@ -201,18 +199,18 @@ pub struct Deposit<'info> {
     )]
     pub source_token_record: Account<'info, TokenRecordAccount>,
     
-    #[account(
-        mut,
-        seeds = [b"metadata", 
-            Metadata::id().as_ref(),
-            nft_mint.key().as_ref(),
-            b"token_record",
-            nft_custody.key().as_ref(),
-        ],
-        seeds::program = Metadata::id(),
-        bump
-    )]
-    pub destination_token_record: Account<'info, TokenRecordAccount>,
+    // #[account(
+    //     mut,
+    //     seeds = [b"metadata", 
+    //         Metadata::id().as_ref(),
+    //         nft_mint.key().as_ref(),
+    //         b"token_record",
+    //         nft_custody.key().as_ref(),
+    //     ],
+    //     seeds::program = Metadata::id(),
+    //     bump
+    // )]
+    // pub destination_token_record: Account<'info, TokenRecordAccount>,
 
     #[account(mut)]
     pub user: Signer<'info>,
@@ -226,9 +224,9 @@ pub struct Deposit<'info> {
     #[account(address = sysvar::instructions::id())]
     pub sysvar_instructions: UncheckedAccount<'info>,
 
-    /// CHECK: account constraints checked in account trait
-    #[account(address = mpl_token_auth_rules::id())]
-    pub auth_rules_program: UncheckedAccount<'info>,
+    // /// CHECK: account constraints checked in account trait
+    // #[account(address = mpl_token_auth_rules::id())]
+    // pub auth_rules_program: UncheckedAccount<'info>,
 
     // /// CHECK: account constraints checked in account trait
     // #[account(owner = mpl_token_auth_rules::id())]

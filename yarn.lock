@@ -44,6 +44,13 @@
     bn.js "^5.1.2"
     buffer-layout "^1.2.0"
 
+"@metaplex-foundation/mpl-token-auth-rules@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@metaplex-foundation/mpl-token-auth-rules/-/mpl-token-auth-rules-3.0.1.tgz#128bfce5a620fdd8d73491d6435a275e3307bfa1"
+  integrity sha512-XzMS6vLFHOU1pAoRQKhIEwNFmWGrR8M9do88D6+wEW/jrqY9FVzbZqlEYfPesd4otFNeOBl+swkka5+x9tpPfQ==
+  dependencies:
+    "@msgpack/msgpack" "2.8.0"
+
 "@metaplex-foundation/mpl-token-metadata@^3.1.2":
   version "3.1.2"
   resolved "https://registry.yarnpkg.com/@metaplex-foundation/mpl-token-metadata/-/mpl-token-metadata-3.1.2.tgz#44721abca353bcb3913589bccbd623f9ae79d76c"
@@ -176,6 +183,11 @@
     "@metaplex-foundation/umi-options" "^0.8.9"
     "@metaplex-foundation/umi-public-keys" "^0.8.9"
     "@metaplex-foundation/umi-serializers" "^0.9.0"
+
+"@msgpack/msgpack@2.8.0":
+  version "2.8.0"
+  resolved "https://registry.yarnpkg.com/@msgpack/msgpack/-/msgpack-2.8.0.tgz#4210deb771ee3912964f14a15ddfb5ff877e70b9"
+  integrity sha512-h9u4u/jiIRKbq25PM+zymTyW6bhTzELvOoUd+AvYriWOAKpLGnIamaET3pnHYoI5iYphAHBI4ayx0MehR+VVPQ==
 
 "@noble/curves@^1.0.0", "@noble/curves@^1.2.0":
   version "1.3.0"
