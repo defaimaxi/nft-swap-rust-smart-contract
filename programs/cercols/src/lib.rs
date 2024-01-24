@@ -62,8 +62,8 @@ pub mod cercols {
         .sysvar_instructions(&ctx.accounts.sysvar_instructions)
         .spl_token_program(&ctx.accounts.metadata_program)
         .spl_ata_program(&ctx.accounts.associated_token_program)
-        // .authorization_rules_program(None)
-        // .authorization_rules(None)
+        // .authorization_rules_program(Some(auth_rules_program))
+        // .authorization_rules(Some(auth_rules))
         .amount(1);
 
         transfer_cpi.invoke()?;

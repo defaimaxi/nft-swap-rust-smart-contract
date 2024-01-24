@@ -26,7 +26,11 @@ import {
 } from "@metaplex-foundation/mpl-token-metadata";
 import { readFileSync } from "fs";
 import path from "path";
-import { findAssociatedTokenPda } from "@metaplex-foundation/mpl-toolbox";
+import {
+  SPL_ASSOCIATED_TOKEN_PROGRAM_ID,
+  SPL_TOKEN_PROGRAM_ID,
+  findAssociatedTokenPda,
+} from "@metaplex-foundation/mpl-toolbox";
 import { MPL_TOKEN_AUTH_RULES_PROGRAM_ID } from "@metaplex-foundation/mpl-token-auth-rules";
 
 describe("cercols", () => {
@@ -51,15 +55,22 @@ describe("cercols", () => {
   umi.use(signerIdentity(createSignerFromKeypair(umi, signer)));
 
   // Programs we need
+  const systemProgram = new anchor.web3.PublicKey(
+    anchor.web3.SystemProgram.programId
+  );
+  const sysvarInstructions = new anchor.web3.PublicKey(
+    anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY
+  );
+  const tokenProgram = new anchor.web3.PublicKey(SPL_TOKEN_PROGRAM_ID);
+  const associatedTokenProgram = new anchor.web3.PublicKey(
+    SPL_ASSOCIATED_TOKEN_PROGRAM_ID
+  );
   const metadataProgram = new anchor.web3.PublicKey(
     MPL_TOKEN_METADATA_PROGRAM_ID
   );
-  const authRulesProgram = new anchor.web3.PublicKey(
-    MPL_TOKEN_AUTH_RULES_PROGRAM_ID
-  );
-  const sysvarInstructions = new anchor.web3.PublicKey(
-    "Sysvar1nstructions1111111111111111111111111"
-  );
+  // const authRulesProgram = new anchor.web3.PublicKey(
+  //   MPL_TOKEN_AUTH_RULES_PROGRAM_ID
+  // );
 
   // Collection Mint
   const collectionMint = generateSigner(umi);
@@ -193,8 +204,11 @@ describe("cercols", () => {
         nftCustody: nftCustodyPubkey,
         sourceTokenRecord: sourceTokenRecordPubkey,
         destinationTokenRecord: destinationTokenRecordPubkey,
-        metadataProgram,
+        systemProgram,
         sysvarInstructions,
+        tokenProgram,
+        associatedTokenProgram,
+        metadataProgram,
         // authRulesProgram,
       })
       .rpc();
