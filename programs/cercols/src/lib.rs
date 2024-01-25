@@ -5,9 +5,7 @@ use anchor_spl::{
     metadata::{MetadataAccount, Metadata, MasterEditionAccount, mpl_token_metadata::instructions::TransferV1CpiBuilder, TokenRecordAccount},
     associated_token::AssociatedToken,
 };
-use mpl_token_auth_rules;
-// use mpl_token_metadata::instructions::Transfer;
-// use mpl_token_metadata::accounts::Metadata;
+// use mpl_token_auth_rules;
 
 declare_id!("FjZVUx8ergLAEaB1Mucqizhk9XtQTZpnAffS5FBT2h4c");
 
@@ -209,7 +207,6 @@ pub struct Deposit<'info> {
             b"token_record",
             nft_custody.key().as_ref(),
         ],
-        // seeds::program = Metadata::id(),
         bump
     )]
     pub destination_token_record: Account<'info, TokenRecordAccount>,
@@ -234,21 +231,6 @@ pub struct Deposit<'info> {
     // #[account(owner = mpl_token_auth_rules::id())]
     // pub auth_rules: UncheckedAccount<'info>,
 }
-
-// impl<'info> Deposit<'info> {
-//     pub fn deposit_nft_ctx(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
-//         let cpi_accounts = Transfer {
-
-//             // from: self.nft_token.to_account_info(),
-//             // to: self.nft_custody.to_account_info(),
-//             // authority: self.user.to_account_info()
-//         };
-
-//         let cpi_program = self.metadata_program.clone().to_account_info();
-
-//         CpiContext::new(cpi_program, cpi_accounts)
-//     }
-// }
 
 #[derive(Accounts)]
 pub struct Withdraw {}

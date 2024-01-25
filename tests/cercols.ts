@@ -24,7 +24,12 @@ import {
 } from "@metaplex-foundation/mpl-token-metadata";
 import { readFileSync } from "fs";
 import path from "path";
-import { findAssociatedTokenPda } from "@metaplex-foundation/mpl-toolbox";
+import {
+  SPL_SYSTEM_PROGRAM_ID,
+  SPL_TOKEN_PROGRAM_ID,
+  findAssociatedTokenPda,
+} from "@metaplex-foundation/mpl-toolbox";
+import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 describe("cercols", () => {
   // Configure the client to use the local cluster.
@@ -48,11 +53,16 @@ describe("cercols", () => {
   umi.use(signerIdentity(createSignerFromKeypair(umi, signer)));
 
   // Programs we need
-  const sysvarInstructions = new anchor.web3.PublicKey(
-    anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY
-  );
+  const tokenProgram = new anchor.web3.PublicKey(SPL_TOKEN_PROGRAM_ID);
   const metadataProgram = new anchor.web3.PublicKey(
     MPL_TOKEN_METADATA_PROGRAM_ID
+  );
+  const associatedTokenProgram = new anchor.web3.PublicKey(
+    ASSOCIATED_TOKEN_PROGRAM_ID
+  );
+  const systemProgram = new anchor.web3.PublicKey(SPL_SYSTEM_PROGRAM_ID);
+  const sysvarInstructions = new anchor.web3.PublicKey(
+    anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY
   );
 
   // Collection Mint
@@ -187,8 +197,11 @@ describe("cercols", () => {
         nftCustody: nftCustodyPubkey,
         sourceTokenRecord: sourceTokenRecordPubkey,
         destinationTokenRecord: destinationTokenRecordPubkey,
-        sysvarInstructions,
+        tokenProgram,
         metadataProgram,
+        associatedTokenProgram,
+        systemProgram,
+        sysvarInstructions,
       })
       .rpc();
 
