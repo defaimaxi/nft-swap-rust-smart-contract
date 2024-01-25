@@ -192,6 +192,7 @@ describe("cercols", () => {
         nftAuthority: nftAuthorityPda,
         nftMint: nftMint2Pubkey,
         nftToken: nftTokenPubkey,
+        user: provider.wallet.publicKey,
         nftMetadata: nftMetadataPubkey,
         nftEdition: nftEditionPubkey,
         nftCustody: nftCustodyPubkey,
