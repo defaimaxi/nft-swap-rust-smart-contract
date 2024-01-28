@@ -29,7 +29,11 @@ import {
   SPL_TOKEN_PROGRAM_ID,
   findAssociatedTokenPda,
 } from "@metaplex-foundation/mpl-toolbox";
-import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddress,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
 
 describe("cercols", () => {
   // Configure the client to use the local cluster.
@@ -101,11 +105,18 @@ describe("cercols", () => {
     program.programId
   );
 
-  const nftCustody = findAssociatedTokenPda(umi, {
-    mint: nftMint2.publicKey,
-    owner: publicKey(nftAuthorityPda),
-  });
-  const nftCustodyPubkey = new anchor.web3.PublicKey(nftCustody);
+  const nftCustody = getAssociatedTokenAddressSync(
+    nftMint2Pubkey,
+    nftAuthorityPda,
+    true,
+    tokenProgram,
+    associatedTokenProgram
+  );
+  // findAssociatedTokenPda(umi, {
+  //   mint: nftMint2.publicKey,
+  //   owner: publicKey(nftAuthorityPda),
+  // });
+  // const nftCustodyPubkey = new anchor.web3.PublicKey(nftCustody);
 
   const sourceTokenRecord = findTokenRecordPda(umi, {
     mint: nftMint2.publicKey,
@@ -185,6 +196,25 @@ describe("cercols", () => {
   });
 
   it("Can deposit an NFT from the collection", async () => {
+    // console.log("pool: ", poolPda.toString());
+    // console.log("nftAuthority: ", nftAuthorityPda.toString());
+    // console.log("nftMint: ", nftMint2Pubkey.toString());
+    // console.log("nftToken: ", nftTokenPubkey.toString());
+    // console.log("user: ", provider.wallet.publicKey.toString());
+    // console.log("nftMetadata: ", nftMetadataPubkey.toString());
+    // console.log("nftEdition: ", nftEditionPubkey.toString());
+    // console.log("nftCustody: ", nftCustody.toString());
+    // console.log("sourceTokenRecord: ", sourceTokenRecordPubkey.toString());
+    // console.log(
+    //   "destinationTokenRecord: ",
+    //   destinationTokenRecordPubkey.toString()
+    // );
+    // console.log("tokenProgram: ", tokenProgram.toString());
+    // console.log("metadataProgram: ", metadataProgram.toString());
+    // console.log("associatedTokenProgram: ", associatedTokenProgram.toString());
+    // console.log("systemProgram: ", systemProgram.toString());
+    // console.log("sysvarInstructions: ", sysvarInstructions.toString());
+
     const tx = await program.methods
       .deposit()
       .accounts({
@@ -195,7 +225,7 @@ describe("cercols", () => {
         user: provider.wallet.publicKey,
         nftMetadata: nftMetadataPubkey,
         nftEdition: nftEditionPubkey,
-        nftCustody: nftCustodyPubkey,
+        nftCustody: nftCustody,
         sourceTokenRecord: sourceTokenRecordPubkey,
         destinationTokenRecord: destinationTokenRecordPubkey,
         tokenProgram,
@@ -205,7 +235,32 @@ describe("cercols", () => {
         sysvarInstructions,
       })
       .rpc();
-
     console.log("TX: ", tx);
+
+    // try {
+    //   const tx = await program.methods
+    //     .deposit()
+    //     .accounts({
+    //       pool: poolPda,
+    //       nftAuthority: nftAuthorityPda,
+    //       nftMint: nftMint2Pubkey,
+    //       nftToken: nftTokenPubkey,
+    //       user: provider.wallet.publicKey,
+    //       nftMetadata: nftMetadataPubkey,
+    //       nftEdition: nftEditionPubkey,
+    //       nftCustody: nftCustody,
+    //       sourceTokenRecord: sourceTokenRecordPubkey,
+    //       destinationTokenRecord: destinationTokenRecordPubkey,
+    //       tokenProgram,
+    //       metadataProgram,
+    //       associatedTokenProgram,
+    //       systemProgram,
+    //       sysvarInstructions,
+    //     })
+    //     .rpc();
+    //   console.log("TX: ", tx);
+    // } catch (error) {
+    //   console.log("error", error);
+    // }
   });
 });
