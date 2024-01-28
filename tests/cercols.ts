@@ -215,52 +215,52 @@ describe("cercols", () => {
     // console.log("systemProgram: ", systemProgram.toString());
     // console.log("sysvarInstructions: ", sysvarInstructions.toString());
 
-    const tx = await program.methods
-      .deposit()
-      .accounts({
-        pool: poolPda,
-        nftAuthority: nftAuthorityPda,
-        nftMint: nftMint2Pubkey,
-        nftToken: nftTokenPubkey,
-        user: provider.wallet.publicKey,
-        nftMetadata: nftMetadataPubkey,
-        nftEdition: nftEditionPubkey,
-        nftCustody: nftCustody,
-        sourceTokenRecord: sourceTokenRecordPubkey,
-        destinationTokenRecord: destinationTokenRecordPubkey,
-        tokenProgram,
-        metadataProgram,
-        associatedTokenProgram,
-        systemProgram,
-        sysvarInstructions,
-      })
-      .rpc();
-    console.log("TX: ", tx);
+    // const tx = await program.methods
+    //   .deposit()
+    //   .accounts({
+    //     pool: poolPda,
+    //     nftAuthority: nftAuthorityPda,
+    //     nftMint: nftMint2Pubkey,
+    //     nftToken: nftTokenPubkey,
+    //     user: provider.wallet.publicKey,
+    //     nftMetadata: nftMetadataPubkey,
+    //     nftEdition: nftEditionPubkey,
+    //     nftCustody: nftCustody,
+    //     sourceTokenRecord: sourceTokenRecordPubkey,
+    //     destinationTokenRecord: destinationTokenRecordPubkey,
+    //     tokenProgram,
+    //     metadataProgram,
+    //     associatedTokenProgram,
+    //     systemProgram,
+    //     sysvarInstructions,
+    //   })
+    //   .rpc({ skipPreflight: true });
+    // console.log("TX: ", tx);
 
-    // try {
-    //   const tx = await program.methods
-    //     .deposit()
-    //     .accounts({
-    //       pool: poolPda,
-    //       nftAuthority: nftAuthorityPda,
-    //       nftMint: nftMint2Pubkey,
-    //       nftToken: nftTokenPubkey,
-    //       user: provider.wallet.publicKey,
-    //       nftMetadata: nftMetadataPubkey,
-    //       nftEdition: nftEditionPubkey,
-    //       nftCustody: nftCustody,
-    //       sourceTokenRecord: sourceTokenRecordPubkey,
-    //       destinationTokenRecord: destinationTokenRecordPubkey,
-    //       tokenProgram,
-    //       metadataProgram,
-    //       associatedTokenProgram,
-    //       systemProgram,
-    //       sysvarInstructions,
-    //     })
-    //     .rpc();
-    //   console.log("TX: ", tx);
-    // } catch (error) {
-    //   console.log("error", error);
-    // }
+    try {
+      const tx = await program.methods
+        .deposit()
+        .accounts({
+          pool: poolPda,
+          nftAuthority: nftAuthorityPda,
+          nftMint: nftMint2Pubkey,
+          nftToken: nftTokenPubkey,
+          user: provider.wallet.publicKey,
+          nftMetadata: nftMetadataPubkey,
+          nftEdition: nftEditionPubkey,
+          nftCustody: nftCustody,
+          sourceTokenRecord: sourceTokenRecordPubkey,
+          destinationTokenRecord: destinationTokenRecordPubkey,
+          tokenProgram,
+          metadataProgram,
+          associatedTokenProgram,
+          systemProgram,
+          sysvarInstructions,
+        })
+        .rpc();
+      console.log("TX: ", tx);
+    } catch (error) {
+      console.log("error", error);
+    }
   });
 });
