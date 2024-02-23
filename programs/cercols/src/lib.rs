@@ -197,19 +197,19 @@ pub struct Deposit<'info> {
     )]
     pub source_token_record: Account<'info, TokenRecordAccount>,
     
+    /// CHECK: account constraints checked in account trait
     #[account(
-        init,
-        payer = user,
-        space = TokenRecordAccount::LEN,
+        mut,
         seeds = [b"metadata", 
             Metadata::id().as_ref(),
             nft_mint.key().as_ref(),
             b"token_record",
             nft_custody.key().as_ref(),
         ],
+        seeds::program = Metadata::id(),
         bump
     )]
-    pub destination_token_record: Account<'info, TokenRecordAccount>,
+    pub destination_token_record: UncheckedAccount<'info>,
 
     #[account(mut)]
     pub user: Signer<'info>,

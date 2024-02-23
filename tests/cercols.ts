@@ -112,11 +112,6 @@ describe("cercols", () => {
     tokenProgram,
     associatedTokenProgram
   );
-  // findAssociatedTokenPda(umi, {
-  //   mint: nftMint2.publicKey,
-  //   owner: publicKey(nftAuthorityPda),
-  // });
-  // const nftCustodyPubkey = new anchor.web3.PublicKey(nftCustody);
 
   const sourceTokenRecord = findTokenRecordPda(umi, {
     mint: nftMint2.publicKey,
@@ -215,28 +210,6 @@ describe("cercols", () => {
     // console.log("systemProgram: ", systemProgram.toString());
     // console.log("sysvarInstructions: ", sysvarInstructions.toString());
 
-    // const tx = await program.methods
-    //   .deposit()
-    //   .accounts({
-    //     pool: poolPda,
-    //     nftAuthority: nftAuthorityPda,
-    //     nftMint: nftMint2Pubkey,
-    //     nftToken: nftTokenPubkey,
-    //     user: provider.wallet.publicKey,
-    //     nftMetadata: nftMetadataPubkey,
-    //     nftEdition: nftEditionPubkey,
-    //     nftCustody: nftCustody,
-    //     sourceTokenRecord: sourceTokenRecordPubkey,
-    //     destinationTokenRecord: destinationTokenRecordPubkey,
-    //     tokenProgram,
-    //     metadataProgram,
-    //     associatedTokenProgram,
-    //     systemProgram,
-    //     sysvarInstructions,
-    //   })
-    //   .rpc({ skipPreflight: true });
-    // console.log("TX: ", tx);
-
     try {
       const tx = await program.methods
         .deposit()
@@ -257,10 +230,19 @@ describe("cercols", () => {
           systemProgram,
           sysvarInstructions,
         })
+        .preInstructions([
+          anchor.web3.ComputeBudgetProgram.setComputeUnitLimit({
+            units: 400_000,
+          }),
+        ])
         .rpc();
-      console.log("TX: ", tx);
+
+      const account = await program.account.poolState.fetch(poolPda);
+      expect(account.size).to.eq(1);
+      console.log("tx", tx);
     } catch (error) {
-      console.log("error", error);
+      console.error(error);
+      throw new Error(error);
     }
   });
 });

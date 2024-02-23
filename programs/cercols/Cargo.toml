@@ -19,3 +19,4 @@ default = []
 anchor-lang = "0.29.0"
 anchor-spl = { version = "0.29.0", features = ["metadata"] }
 mpl-token-auth-rules = { version = "1.4.3", features = ["no-entrypoint"] }
+mpl-utils = "0.3.3"

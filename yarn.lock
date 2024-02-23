@@ -175,6 +175,13 @@
   dependencies:
     buffer "^6.0.3"
 
+"@metaplex-foundation/umi-web3js-adapters@^0.9.1":
+  version "0.9.1"
+  resolved "https://registry.yarnpkg.com/@metaplex-foundation/umi-web3js-adapters/-/umi-web3js-adapters-0.9.1.tgz#e37cee0b835608044558785c8bf69a5ca92cf341"
+  integrity sha512-O6lQGJFebRM8P67ajvUpuctJ/J39Lylp4wyg8E1tHmFxUsdBC7M9qBixi/WmCiNKgSfVrq6MmiYaba3OSrtqwg==
+  dependencies:
+    buffer "^6.0.3"
+
 "@metaplex-foundation/umi@^0.9.0":
   version "0.9.0"
   resolved "https://registry.yarnpkg.com/@metaplex-foundation/umi/-/umi-0.9.0.tgz#29a5a5a382e47399396a5cf3de9b5f1294cad373"
