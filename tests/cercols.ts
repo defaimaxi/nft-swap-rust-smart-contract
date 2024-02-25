@@ -75,19 +75,19 @@ describe("cercols", () => {
   );
 
   // NFT of the collection - must be owned by the Signer
-  const nftMint2 = generateSigner(umi);
-  const nftMint2Pubkey = new anchor.web3.PublicKey(nftMint2.publicKey);
+  const nftMint = generateSigner(umi);
+  const nftMintPubkey = new anchor.web3.PublicKey(nftMint.publicKey);
 
   const nftToken = findAssociatedTokenPda(umi, {
-    mint: nftMint2.publicKey,
+    mint: nftMint.publicKey,
     owner: umi.identity.publicKey,
   });
   const nftTokenPubkey = new anchor.web3.PublicKey(publicKey(nftToken));
 
-  const nftMetadata = findMetadataPda(umi, { mint: nftMint2.publicKey });
+  const nftMetadata = findMetadataPda(umi, { mint: nftMint.publicKey });
   const nftMetadataPubkey = new anchor.web3.PublicKey(publicKey(nftMetadata));
 
-  const nftEdition = findMasterEditionPda(umi, { mint: nftMint2.publicKey });
+  const nftEdition = findMasterEditionPda(umi, { mint: nftMint.publicKey });
   const nftEditionPubkey = new anchor.web3.PublicKey(publicKey(nftEdition));
 
   const [poolPda] = anchor.web3.PublicKey.findProgramAddressSync(
@@ -105,7 +105,7 @@ describe("cercols", () => {
   );
 
   const nftCustody = getAssociatedTokenAddressSync(
-    nftMint2Pubkey,
+    nftMintPubkey,
     nftAuthorityPda,
     true,
     tokenProgram,
@@ -113,7 +113,7 @@ describe("cercols", () => {
   );
 
   const sourceTokenRecord = findTokenRecordPda(umi, {
-    mint: nftMint2.publicKey,
+    mint: nftMint.publicKey,
     token: publicKey(nftToken),
   });
   const sourceTokenRecordPubkey = new anchor.web3.PublicKey(
@@ -121,7 +121,7 @@ describe("cercols", () => {
   );
 
   const destinationTokenRecord = findTokenRecordPda(umi, {
-    mint: nftMint2.publicKey,
+    mint: nftMint.publicKey,
     token: publicKey(nftCustody),
   });
   const destinationTokenRecordPubkey = new anchor.web3.PublicKey(
@@ -147,7 +147,7 @@ describe("cercols", () => {
 
     console.log("Creating pNFT...");
     await createProgrammableNft(umi, {
-      mint: nftMint2,
+      mint: nftMint,
       tokenOwner: umi.identity.publicKey,
       name: "Cercols #1",
       uri: "https://cercols/1",
@@ -196,7 +196,7 @@ describe("cercols", () => {
         .accounts({
           pool: poolPda,
           nftAuthority: nftAuthorityPda,
-          nftMint: nftMint2Pubkey,
+          nftMint: nftMintPubkey,
           nftToken: nftTokenPubkey,
           user: provider.wallet.publicKey,
           nftMetadata: nftMetadataPubkey,
@@ -236,7 +236,7 @@ describe("cercols", () => {
         .accounts({
           pool: poolPda,
           nftAuthority: nftAuthorityPda,
-          nftMint: nftMint2Pubkey,
+          nftMint: nftMintPubkey,
           nftToken: nftTokenPubkey,
           user: provider.wallet.publicKey,
           nftMetadata: nftMetadataPubkey,
@@ -277,7 +277,7 @@ describe("cercols", () => {
         .accounts({
           pool: poolPda,
           nftAuthority: nftAuthorityPda,
-          nftMint: nftMint2Pubkey,
+          nftMint: nftMintPubkey,
           nftToken: nftTokenPubkey,
           user: provider.wallet.publicKey,
           nftMetadata: nftMetadataPubkey,
@@ -308,5 +308,40 @@ describe("cercols", () => {
       console.error(error);
       throw new Error(error);
     }
+  });
+
+  it("Can swap an NFT from the collection in to the pool", async () => {
+    // Mint of the NFT to swap
+    const swapNftMint = generateSigner(umi);
+
+    const swapNftToken = findAssociatedTokenPda(umi, {
+      mint: swapNftMint.publicKey,
+      owner: umi.identity.publicKey,
+    });
+
+    const swapNftMetadata = findMetadataPda(umi, {
+      mint: swapNftMint.publicKey,
+    });
+
+    const swapNftEdition = findMasterEditionPda(umi, {
+      mint: swapNftMint.publicKey,
+    });
+
+    console.log("Creating swap pNFT...");
+    await createProgrammableNft(umi, {
+      mint: swapNftMint,
+      tokenOwner: umi.identity.publicKey,
+      name: "Cercols #2",
+      uri: "https://cercols/1",
+      sellerFeeBasisPoints: percentAmount(2),
+      collection: some({ key: collectionMint.publicKey, verified: false }),
+    }).sendAndConfirm(umi);
+
+    console.log("Verifying collection on swap pNFT...");
+    await verifyCollectionV1(umi, {
+      metadata: swapNftMetadata,
+      collectionMint: collectionMint.publicKey,
+      authority: umi.payer,
+    }).sendAndConfirm(umi);
   });
 });
