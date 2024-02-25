@@ -31,7 +31,6 @@ import {
 } from "@metaplex-foundation/mpl-toolbox";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
-  getAssociatedTokenAddress,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 
@@ -191,27 +190,8 @@ describe("cercols", () => {
   });
 
   it("Can deposit an NFT from the collection", async () => {
-    // console.log("pool: ", poolPda.toString());
-    // console.log("nftAuthority: ", nftAuthorityPda.toString());
-    // console.log("nftMint: ", nftMint2Pubkey.toString());
-    // console.log("nftToken: ", nftTokenPubkey.toString());
-    // console.log("user: ", provider.wallet.publicKey.toString());
-    // console.log("nftMetadata: ", nftMetadataPubkey.toString());
-    // console.log("nftEdition: ", nftEditionPubkey.toString());
-    // console.log("nftCustody: ", nftCustody.toString());
-    // console.log("sourceTokenRecord: ", sourceTokenRecordPubkey.toString());
-    // console.log(
-    //   "destinationTokenRecord: ",
-    //   destinationTokenRecordPubkey.toString()
-    // );
-    // console.log("tokenProgram: ", tokenProgram.toString());
-    // console.log("metadataProgram: ", metadataProgram.toString());
-    // console.log("associatedTokenProgram: ", associatedTokenProgram.toString());
-    // console.log("systemProgram: ", systemProgram.toString());
-    // console.log("sysvarInstructions: ", sysvarInstructions.toString());
-
     try {
-      const tx = await program.methods
+      await program.methods
         .deposit()
         .accounts({
           pool: poolPda,
@@ -237,9 +217,93 @@ describe("cercols", () => {
         ])
         .rpc();
 
-      const account = await program.account.poolState.fetch(poolPda);
-      expect(account.size).to.eq(1);
-      console.log("tx", tx);
+      const poolState = await program.account.poolState.fetch(poolPda);
+      const nftCustodyBalance =
+        await provider.connection.getTokenAccountBalance(nftCustody);
+
+      expect(poolState.size).to.eq(1);
+      expect(nftCustodyBalance.value.uiAmount).to.eq(1);
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
+    }
+  });
+
+  it("Can withdraw an NFT from the collection", async () => {
+    try {
+      await program.methods
+        .withdraw()
+        .accounts({
+          pool: poolPda,
+          nftAuthority: nftAuthorityPda,
+          nftMint: nftMint2Pubkey,
+          nftToken: nftTokenPubkey,
+          user: provider.wallet.publicKey,
+          nftMetadata: nftMetadataPubkey,
+          nftEdition: nftEditionPubkey,
+          nftCustody: nftCustody,
+          sourceTokenRecord: destinationTokenRecordPubkey,
+          destinationTokenRecord: sourceTokenRecordPubkey,
+          tokenProgram,
+          metadataProgram,
+          associatedTokenProgram,
+          systemProgram,
+          sysvarInstructions,
+        })
+        .preInstructions([
+          anchor.web3.ComputeBudgetProgram.setComputeUnitLimit({
+            units: 400_000,
+          }),
+        ])
+        .rpc();
+
+      const poolState = await program.account.poolState.fetch(poolPda);
+      const nftCustodyAccount = await provider.connection.getAccountInfo(
+        nftCustody
+      );
+
+      expect(poolState.size).to.eq(0);
+      expect(nftCustodyAccount).to.eq(null);
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
+    }
+  });
+
+  it("Can deposit the same NFT from the collection again", async () => {
+    try {
+      await program.methods
+        .deposit()
+        .accounts({
+          pool: poolPda,
+          nftAuthority: nftAuthorityPda,
+          nftMint: nftMint2Pubkey,
+          nftToken: nftTokenPubkey,
+          user: provider.wallet.publicKey,
+          nftMetadata: nftMetadataPubkey,
+          nftEdition: nftEditionPubkey,
+          nftCustody: nftCustody,
+          sourceTokenRecord: sourceTokenRecordPubkey,
+          destinationTokenRecord: destinationTokenRecordPubkey,
+          tokenProgram,
+          metadataProgram,
+          associatedTokenProgram,
+          systemProgram,
+          sysvarInstructions,
+        })
+        .preInstructions([
+          anchor.web3.ComputeBudgetProgram.setComputeUnitLimit({
+            units: 400_000,
+          }),
+        ])
+        .rpc();
+
+      const poolState = await program.account.poolState.fetch(poolPda);
+      const nftCustodyBalance =
+        await provider.connection.getTokenAccountBalance(nftCustody);
+
+      expect(poolState.size).to.eq(1);
+      expect(nftCustodyBalance.value.uiAmount).to.eq(1);
     } catch (error) {
       console.error(error);
       throw new Error(error);
