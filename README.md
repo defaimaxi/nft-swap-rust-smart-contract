@@ -4,6 +4,8 @@ Create pools of NFTs that are part of a Metaplex Certified Collection. Allow hol
 
 You know, for fun.
 
+**Cer**tified **Col**lection **S**wap, hence the name **Cercols**.
+
 ## Active Development
 
 This program is far from feature-complete and is under development. It has not been deployed to any public Solana clusters yet.
