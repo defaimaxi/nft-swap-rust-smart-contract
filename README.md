@@ -1,7 +1,7 @@
-# Cercols: NFT Collection Swap on Solana
+# NFT Collection Swap on Solana
 
 
-Cercols (Certified Collection Swap) is an open-source Rust smart contract for the Solana blockchain that enables users to create and manage pools of NFTs from Metaplex Certified Collections. Holders can swap their NFT for a random one from the pool, making NFT trading fun, fair, and decentralized.
+This is an open-source Rust smart contract for the Solana blockchain that enables users to create and manage pools of NFTs from Metaplex Certified Collections. Holders can swap their NFT for a random one from the pool, making NFT trading fun, fair, and decentralized.
 
 ## Features
 - NFT Pooling: Create pools of NFTs from Metaplex Certified Collections.
